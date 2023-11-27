@@ -3,12 +3,11 @@
 #include <string>
 
 class Account {
-protected:
+
+public:
     std::string accountNumber;
     std::string accountHolder;
     double balance;
-
-public:
     Account(const std::string& number, const std::string& holder, double initialBalance)
         : accountNumber(number), accountHolder(holder), balance(initialBalance) {}
 
@@ -37,6 +36,10 @@ public:
     }
 
     virtual void displayAdditionalDetails() const {}
+
+    friend std::ostream& operator<<(std::ostream& os, const Account& account);
+
+    friend Account operator+(const Account& account1, const Account& account2);
 };
 
 class SavingsAccount : public Account {
@@ -51,7 +54,7 @@ public:
         if (balance - amount >= 0) {
             balance -= amount;
         } else {
-            std::cout << "Insufficient balance." << std::endl;
+            std::cout << "Insufficient balance. Minimum balance required: $0.00" << std::endl;
         }
     }
 
@@ -76,7 +79,7 @@ public:
         if (balance + overdraftLimit >= amount) {
             balance -= amount;
         } else {
-            std::cout << "Insufficient balance." << std::endl;
+            std::cout << "Insufficient balance. Overdraft limit: $" << overdraftLimit << std::endl;
         }
     }
 
@@ -89,11 +92,11 @@ public:
     }
 };
 
-CurrentAccount operator+(const CurrentAccount& current, const SavingsAccount& savings) {
-    CurrentAccount result = current;
-    result.deposit(savings.balance);
-    savings.withdraw(savings.balance);
-    return result;
+Account operator+(Account& account1, Account& account2) {
+    int transfer = 300;
+    account1.withdraw(transfer);
+    account2.deposit(transfer);
+    return account1;
 }
 
 std::ostream& operator<<(std::ostream& os, const Account& account) {
@@ -109,19 +112,20 @@ int main() {
     SavingsAccount savings("S123", "John Doe", 1000, 0.02);
     CurrentAccount current("C456", "Jane Doe", 2000, 500);
 
-    std::cout << savings;
-    std::cout << current;
+    savings.displayDetails();
+    current.displayDetails();
 
     savings.deposit(500);
     current.withdraw(1000);
 
-    std::cout << savings;
-    std::cout << current;
+    savings.displayDetails();
+    current.displayDetails();
 
-    current = current + savings;
+    // Transfer 300 from savings to current
+    Account result = savings + current;
 
-    std::cout << savings;
-    std::cout << current;
+    savings.displayDetails();
+    current.displayDetails();
 
     return 0;
 }
